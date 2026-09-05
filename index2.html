@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>KitchenSync — Restaurant Operations</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+  <style>
+    :root {
+      --bg:#0d1117; --surface:#151b22; --surface2:#1b232d; --surface3:#222c36;
+      --line:#2a3541; --line2:#354250; --text:#f1f5f8; --muted:#8d9aa8; --faint:#627080;
+      --amber:#f5b544; --amber2:#d99227; --green:#35c98b; --red:#ef6262; --blue:#54a9db;
+      --amberBg:rgba(245,181,68,.12); --greenBg:rgba(53,201,139,.12);
+      --redBg:rgba(239,98,98,.12); --blueBg:rgba(84,169,219,.12);
+      --shadow:0 14px 35px rgba(0,0,0,.22);
+    }
+    *{box-sizing:border-box}
+    html,body,#root{margin:0;min-height:100%;background:var(--bg);color:var(--text)}
+    body{font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+    button{font:inherit}
+    button:hover{filter:brightness(1.07);transform:translateY(-1px)}
+    button:active{transform:translateY(0)}
+    button:disabled{opacity:0.6;cursor:not-allowed;transform:none}
+    .app{max-width:1560px;margin:0 auto;padding:18px 20px 30px}
+    .topbar{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:17px}
+    .brand{display:flex;align-items:center;gap:11px}
+    .logo{width:38px;height:38px;border-radius:11px;background:var(--amberBg);border:1px solid rgba(245,181,68,.35);display:grid;place-items:center;color:var(--amber)}
+    .title{font-size:17px;font-weight:850;letter-spacing:-.02em}
+    .subtitle{font-size:10.5px;color:var(--faint);margin-top:2px}
+    .live{display:flex;align-items:center;gap:7px;margin-left:10px;padding:5px 8px;border-radius:999px;background:var(--greenBg);color:var(--green);font-size:10px;font-weight:850;letter-spacing:.06em}
+    .dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 0 4px rgba(53,201,139,.09)}
+    .actions{display:flex;align-items:center;gap:10px}
+    .clock{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;text-align:right}
+    .date{font:10px Inter,sans-serif;color:var(--faint);margin-top:2px}
+    .service{padding:8px 11px;border:1px solid var(--line);background:var(--surface);border-radius:9px;font-size:11px;color:var(--muted)}
+    .tabs{display:flex;gap:4px;background:var(--surface);border:1px solid var(--line);padding:4px;border-radius:10px}
+    .tab{border:0;background:transparent;color:var(--faint);padding:8px 12px;border-radius:7px;cursor:pointer;font-weight:750;font-size:11.5px}
+    .tab.active{background:var(--surface3);color:var(--text)}
+    .kpis{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-bottom:14px}
+    .card{background:var(--surface);border:1px solid var(--line);border-radius:13px;box-shadow:var(--shadow)}
+    .kpi{padding:13px 14px}
+    .kpiTop{display:flex;justify-content:space-between;align-items:center;gap:10px}
+    .kpiLabel{font-size:10px;color:var(--faint);font-weight:850;letter-spacing:.08em;text-transform:uppercase}
+    .kpiValue{font-size:23px;font-weight:850;letter-spacing:-.03em;margin-top:5px}
+    .kpiSub{font-size:10.5px;color:var(--muted);margin-top:3px}
+    .kpiIcon{width:31px;height:31px;display:grid;place-items:center;border-radius:9px}
+    .progress{height:4px;background:var(--surface3);border-radius:99px;overflow:hidden;margin-top:10px}
+    .fill{height:100%;border-radius:99px;transition:width .45s ease}
+    .layout{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(320px,.85fr);gap:14px}
+    .stack{display:flex;flex-direction:column;gap:14px}
+    .panel{padding:16px}
+    .panelHead{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}
+    .eyebrow{font-size:10px;color:var(--faint);font-weight:850;letter-spacing:.09em}
+    .headMeta{font-size:10px;color:var(--faint)}
+    .hero{padding:18px;background:linear-gradient(150deg,rgba(245,181,68,.11),var(--surface) 50%);border-color:rgba(245,181,68,.5)}
+    .heroRow{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+    .heroTitle{font-size:24px;font-weight:900;letter-spacing:-.035em;margin-top:8px}
+    .heroText{font-size:12px;line-height:1.55;color:var(--muted);max-width:850px;margin-top:5px}
+    .priority{padding:6px 9px;background:var(--amberBg);color:var(--amber);border-radius:999px;font-size:10px;font-weight:850}
+    .options{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:15px}
+    .option{padding:11px;border-radius:9px;background:rgba(255,255,255,.02);border:1px solid var(--line)}
+    .option.recommended{border-color:rgba(245,181,68,.5);background:rgba(245,181,68,.055)}
+    .optionTitle{font-size:10px;font-weight:850;color:var(--faint)}
+    .option.recommended .optionTitle{color:var(--amber)}
+    .optionLine{font-size:11.5px;color:var(--muted);margin-top:6px}
+    .btns{display:flex;gap:8px;margin-top:14px}
+    .primary,.secondary{border-radius:8px;padding:8px 12px;cursor:pointer;font-size:11.5px;font-weight:850}
+    .primary{border:0;background:var(--amber);color:#1b1405}
+    .secondary{background:transparent;color:var(--text);border:1px solid var(--line2)}
+    .queueList{max-height:350px;overflow:auto;padding-right:2px}
+    .order{padding:11px;border:1px solid var(--line);background:var(--surface2);border-radius:9px;margin-bottom:8px}
+    .order.active{border-color:rgba(245,181,68,.55);background:var(--amberBg)}
+    .orderTop{display:flex;align-items:center;justify-content:space-between;gap:10px}
+    .orderLeft{display:flex;align-items:center;gap:9px;min-width:0}
+    .typeIcon{width:29px;height:29px;border-radius:8px;background:var(--surface3);display:grid;place-items:center;flex-shrink:0}
+    .orderName{font-size:12.5px;font-weight:800}
+    .orderMeta{font-size:10px;color:var(--faint);margin-top:2px}
+    .badge{font-size:10px;padding:4px 8px;border-radius:999px;font-weight:800;white-space:nowrap}
+    .track{height:3px;background:var(--surface3);border-radius:99px;overflow:hidden;margin-top:9px}
+    .miniBtn{border:1px solid var(--line);background:var(--surface3);color:var(--muted);border-radius:6px;padding:6px 8px;font-size:10px;font-weight:750;cursor:pointer;margin-top:8px}
+    .stations .station{margin-bottom:14px}
+    .stationRow{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+    .stationName{font-size:11.5px;font-weight:700}
+    .stationState{font-size:9.5px}
+    .stationPct{font:11px ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--muted)}
+    .stationBar{height:7px;background:var(--surface3);border-radius:99px;overflow:hidden}
+    .grid2{display:grid;grid-template-columns:1.1fr .9fr;gap:14px}
+    .metricLine{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid var(--line);font-size:11px}
+    .metricLine:last-child{border-bottom:0}
+    .metricLabel{color:var(--muted)}
+    .metricValue{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+    .good{color:var(--green)} .warn{color:var(--amber)} .bad{color:var(--red)} .blue{color:var(--blue)}
+    .activity{display:flex;gap:9px;padding:8px 0;border-bottom:1px solid var(--line)}
+    .activity:last-child{border-bottom:0}
+    .activityDot{width:7px;height:7px;border-radius:50%;background:var(--amber);margin-top:4px;flex-shrink:0}
+    .activityText{font-size:11px;color:var(--muted);line-height:1.45}
+    .sim{display:flex;gap:7px;flex-wrap:wrap}
+    .sim button{border:1px solid var(--line);background:var(--surface2);color:var(--muted);border-radius:8px;padding:8px 10px;cursor:pointer;font-size:10.5px;font-weight:750}
+    .empty{text-align:center;color:var(--faint);font-size:11px;padding:25px 0}
+    .tableRow,.riderRow{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px;border:1px solid var(--line);background:var(--surface2);border-radius:9px;margin-bottom:8px}
+    .bigName{font-size:12.5px;font-weight:800}
+    .small{font-size:10.5px;color:var(--faint);margin-top:3px}
+    .rightInfo{display:flex;align-items:center;gap:9px}
+    .secondaryStat{font:10.5px ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--faint)}
+    @media(max-width:1150px){.kpis{grid-template-columns:repeat(3,minmax(0,1fr))}.layout{grid-template-columns:1fr}.grid2{grid-template-columns:1fr}}
+    @media(max-width:700px){.app{padding:12px}.topbar{align-items:flex-start}.actions{width:100%;justify-content:space-between}.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.options{grid-template-columns:1fr}.tabs .tab{padding:7px 9px}}
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const {useState,useEffect,useCallback}=React;
+
+const API_BASE = "http://localhost:3001";
+
+const C={
+ amber:"#f5b544", green:"#35c98b", red:"#ef6262", blue:"#54a9db",
+ amberBg:"rgba(245,181,68,.12)", greenBg:"rgba(53,201,139,.12)",
+ redBg:"rgba(239,98,98,.12)", blueBg:"rgba(84,169,219,.12)"
+};
+
+function status(order,riders){
+ if(order.type==="delivery"){
+   const r=riders.find(x=>x.id===order.riderId);
+   const slack=(r?.eta??999)-order.prep;
+   if(slack<-2)return"critical";
+   if(slack<3)return"atRisk";
+   return"onTrack";
+ }
+ const p=(order.waited||0)+order.prep;
+ if(p>18)return"critical";
+ if(p>10)return"atRisk";
+ return"onTrack";
+}
+
+function Icon({d,size=15,color="currentColor"}){
+ return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d={d}/></svg>
+}
+const Flame=()=> <Icon d="M12 2c1 4-3 5-3 9a3 3 0 0 0 6 0c0-2-1-3-1-5 2 1 3 4 3 6a5 5 0 0 1-10 0c0-5 3-6 5-10z"/>;
+const Bike=()=> <Icon d="M6 17l4-9h4l4 9M10 8h5M6 20a3 3 0 100-6 3 3 0 000 6zM18 20a3 3 0 100-6 3 3 0 000 6z"/>;
+const Chair=()=> <Icon d="M5 11V7a2 2 0 012-2h10a2 2 0 012 2v4M4 11h16v5a1 1 0 01-1 1H5a1 1 0 01-1-1v-5M6 17v2M18 17v2"/>;
+const Clock=()=> <Icon d="M12 7v5l3 2M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>;
+const Alert=()=> <Icon d="M12 9v4M12 17h.01M10.3 3.4L2.6 17a2 2 0 001.7 3h15.4a2 2 0 001.7-3L13.7 3.4a2 2 0 00-3.4 0z"/>;
+const Thermo=()=> <Icon d="M14 4a2 2 0 00-4 0v9.5a4 4 0 104 0V4z"/>;
+const Plus=()=> <Icon d="M12 5v14M5 12h14"/>;
+const Reset=()=> <Icon d="M3 12a9 9 0 101.8-5.4M3 4v6h6"/>;
+const UserX=()=> <Icon d="M15 20a6 6 0 00-12 0M9 10a4 4 0 100-8 4 4 0 000 8zM17 9l5 5m0-5l-5 5"/>;
+const Zap=()=> <Icon d="M13 2L4 14h6l-1 8 9-12h-6l1-8z"/>;
+const Check=()=> <Icon d="M20 6L9 17l-5-5"/>
+
+function Badge({kind,children}){
+ const map={critical:[C.red,C.redBg],atRisk:[C.amber,C.amberBg],onTrack:[C.green,C.greenBg],available:[C.green,C.greenBg],delivering:[C.blue,C.blueBg],delayed:[C.amber,C.amberBg],unavailable:[C.red,C.redBg]};
+ const [fg,bg]=map[kind]||map.onTrack;
+ return <span className="badge" style={{color:fg,background:bg}}>{children}</span>
+}
+
+function Kpi({icon,label,value,sub,color= C.amber,progress}){
+ return <div className="card kpi">
+   <div className="kpiTop">
+     <div><div className="kpiLabel">{label}</div><div className="kpiValue">{value}</div><div className="kpiSub">{sub}</div></div>
+     <div className="kpiIcon" style={{background:color+"1e",color}}>{React.createElement(icon)}</div>
+   </div>
+   {progress!==undefined&&<div className="progress"><div className="fill" style={{width:progress+"%",background:color}}/></div>}
+ </div>
+}
+
+function Station({s}){
+ const color=s.load>=90?C.red:s.load>=70?C.amber:C.green;
+ const state=s.load>=90?"Overloaded":s.load>=70?"Busy":"Healthy";
+ return <div className="station">
+   <div className="stationRow"><span className="stationName">{s.name}<span className="stationState" style={{color,marginLeft:7}}>{state}</span></span><span className="stationPct">{s.load}%</span></div>
+   <div className="stationBar"><div className="fill" style={{width:s.load+"%",background:color}}/></div>
+ </div>
+}
+
+function OrderRow({o,riders,active,onStart,isPending}){
+ const st=status(o,riders), rider=o.type==="delivery"?riders.find(r=>r.id===o.riderId):null;
+ const urgency=o.type==="delivery"?`Prep ${o.prep}m · ${rider?`Rider ${rider.id} ${rider.eta}m`:"No rider"}`:`Waiting ${o.waited||0}m · Prep ${o.prep}m`;
+ const progress=o.type==="dinein"?Math.min(100,((o.waited||0)/18)*100):Math.min(100,(o.prep/Math.max(1,rider?.eta||1))*100);
+ return <div className={"order "+(active?"active":"")}>
+   <div className="orderTop">
+     <div className="orderLeft"><div className="typeIcon" style={{color:o.type==="delivery"?C.blue:C.amber}}>{o.type==="delivery"?<Bike/>:<Chair/>}</div>
+       <div><div className="orderName">{o.label}</div><div className="orderMeta">{urgency}</div></div>
+     </div>
+     <Badge kind={st}>{st==="atRisk"?"At risk":st==="critical"?"Critical":"On track"}</Badge>
+   </div>
+   <div className="track"><div className="fill" style={{width:progress+"%",background:st==="critical"?C.red:st==="atRisk"?C.amber:C.green}}/></div>
+   {active&&<button className="miniBtn" disabled={isPending} onClick={()=>onStart(o)}>{isPending?"Starting...":"Start this order now"}</button>}
+ </div>
+}
+
+function App(){
+ const [tab,setTab]=useState("kitchen");
+ const [stations,setStations]=useState([]);
+ const [orders,setOrders]=useState([]);
+ const [riders,setRiders]=useState([]);
+ const [rec,setRec]=useState(null);
+ const [backendError,setBackendError]=useState(null);
+ const [loading,setLoading]=useState(true);
+ const [pendingAction,setPendingAction]=useState(null);
+ const [now,setNow]=useState(new Date());
+ const [log,setLog]=useState(["Connecting to KitchenSync operations control room..."]);
+
+ useEffect(()=>{const t=setInterval(()=>setNow(new Date()),1000);return()=>clearInterval(t)},[]);
+
+ const write=useCallback(m=>setLog(x=>[(new Date()).toLocaleTimeString([], {hour:"2-digit",minute:"2-digit",second:"2-digit"})+" · "+m,...x].slice(0,7)),[]);
+
+ const fetchAll=useCallback(async(isInitial=false)=>{
+   try {
+     const [resO, resR, resS, resRec] = await Promise.all([
+       fetch(`${API_BASE}/orders`),
+       fetch(`${API_BASE}/riders`),
+       fetch(`${API_BASE}/stations`),
+       fetch(`${API_BASE}/schedule/recommendation`)
+     ]);
+
+     if (!resO.ok || !resR.ok || !resS.ok || !resRec.ok) {
+       throw new Error(`API HTTP Error: orders=${resO.status}, riders=${resR.status}, stations=${resS.status}, rec=${resRec.status}`);
+     }
+
+     const [ordersData, ridersData, stationsData, recData] = await Promise.all([
+       resO.json(),
+       resR.json(),
+       resS.json(),
+       resRec.json()
+     ]);
+
+     setOrders(ordersData);
+     setRiders(ridersData);
+     setStations(stationsData);
+     setRec(recData);
+     setBackendError(null);
+     if(isInitial){
+       write(`System online · scheduling engine monitoring ${ordersData.length} active orders`);
+     }
+   } catch(err) {
+     console.error("Backend fetch error:", err);
+     setBackendError(err.message || "Failed to communicate with backend");
+     setRec(null); // CRITICAL: NEVER compute local recommendation on error!
+   } finally {
+     if(isInitial) setLoading(false);
+   }
+ },[write]);
+
+ useEffect(()=>{
+   fetchAll(true);
+   const interval = setInterval(()=>fetchAll(false), 3000);
+   return ()=>clearInterval(interval);
+ },[fetchAll]);
+
+ const start=useCallback(async(o)=>{
+   if(!o || pendingAction) return;
+   setPendingAction(`start-${o.id}`);
+   try {
+     const res = await fetch(`${API_BASE}/orders/${o.id}/start`, { method: "POST" });
+     if (!res.ok) {
+       const errData = await res.json().catch(()=>({}));
+       throw new Error(errData.error || `HTTP ${res.status}`);
+     }
+     write("Started "+o.label+" from priority queue");
+     await fetchAll(false);
+   } catch(err) {
+     console.error("Failed to start order:", err);
+     write("Error starting "+o.label+": "+err.message);
+     setBackendError("Action failed: "+err.message);
+   } finally {
+     setPendingAction(null);
+   }
+ },[pendingAction, write, fetchAll]);
+
+ const addOrder=async(type)=>{
+   if(pendingAction) return;
+   setPendingAction(`add-${type}`);
+   try {
+     const res = await fetch(`${API_BASE}/orders`, {
+       method: "POST",
+       headers: { "Content-Type": "application/json" },
+       body: JSON.stringify({ type })
+     });
+     if (!res.ok) {
+       const errData = await res.json().catch(()=>({}));
+       throw new Error(errData.error || `HTTP ${res.status}`);
+     }
+     const data = await res.json();
+     write("New "+(type==="delivery"?"delivery":"table")+" · "+data.order.label);
+     await fetchAll(false);
+   } catch(err) {
+     console.error("Failed to add order:", err);
+     write("Error adding order: "+err.message);
+     setBackendError("Action failed: "+err.message);
+   } finally {
+     setPendingAction(null);
+   }
+ };
+
+ const delay=async()=>{
+   if(pendingAction) return;
+   setPendingAction("delay");
+   try {
+     const res = await fetch(`${API_BASE}/events/rider-delay`, {
+       method: "POST",
+       headers: { "Content-Type": "application/json" },
+       body: JSON.stringify({ delayMinutes: 5 })
+     });
+     if (!res.ok) {
+       const errData = await res.json().catch(()=>({}));
+       throw new Error(errData.error || `HTTP ${res.status}`);
+     }
+     const data = await res.json();
+     write(data.affectedRider.id+" delayed · ETA "+data.affectedRider.eta+"m");
+     await fetchAll(false);
+   } catch(err) {
+     console.error("Failed to delay rider:", err);
+     write("Error delaying rider: "+err.message);
+     setBackendError("Action failed: "+err.message);
+   } finally {
+     setPendingAction(null);
+   }
+ };
+
+ const down=async()=>{
+   if(pendingAction) return;
+   setPendingAction("down");
+   try {
+     const res = await fetch(`${API_BASE}/events/resource-unavailable`, {
+       method: "POST",
+       headers: { "Content-Type": "application/json" },
+       body: JSON.stringify({ resourceType: "rider" })
+     });
+     if (!res.ok) {
+       const errData = await res.json().catch(()=>({}));
+       throw new Error(errData.error || `HTTP ${res.status}`);
+     }
+     const data = await res.json();
+     write(data.affectedResource.id+" marked unavailable");
+     await fetchAll(false);
+   } catch(err) {
+     console.error("Failed to mark resource unavailable:", err);
+     write("Error marking unavailable: "+err.message);
+     setBackendError("Action failed: "+err.message);
+   } finally {
+     setPendingAction(null);
+   }
+ };
+
+ const slow=async()=>{
+   if(pendingAction) return;
+   setPendingAction("slow");
+   try {
+     const res = await fetch(`${API_BASE}/events/kitchen-slowdown`, {
+       method: "POST",
+       headers: { "Content-Type": "application/json" },
+       body: JSON.stringify({ loadIncrease: 12, prepIncrease: 2 })
+     });
+     if (!res.ok) {
+       const errData = await res.json().catch(()=>({}));
+       throw new Error(errData.error || `HTTP ${res.status}`);
+     }
+     write("Kitchen slowdown · prep estimates increased");
+     await fetchAll(false);
+   } catch(err) {
+     console.error("Failed to trigger slowdown:", err);
+     write("Error on slowdown: "+err.message);
+     setBackendError("Action failed: "+err.message);
+   } finally {
+     setPendingAction(null);
+   }
+ };
+
+ const atRisk=orders.filter(o=>status(o,riders)!=="onTrack").length;
+ const avg=stations.length?Math.round(stations.reduce((a,s)=>a+s.load,0)/stations.length):0;
+ const ready=riders.filter(r=>r.status==="available").length;
+ const activeRidersCount=riders.filter(r=>r.status!=="unavailable").length;
+ const dine=orders.filter(o=>o.type==="dinein"), delivery=orders.filter(o=>o.type==="delivery");
+
+ return <div className="app">
+   <header className="topbar">
+     <div className="brand">
+       <div className="logo"><Flame/></div>
+       <div><div className="title">KitchenSync</div><div className="subtitle">Restaurant operations control room · Shift A</div></div>
+       <div className="live" style={backendError?{background:C.redBg,color:C.red}:{}}><span className="dot" style={backendError?{background:C.red,boxShadow:"0 0 0 4px rgba(239,98,98,.12)"}:{}}/>{backendError?"OFFLINE":"LIVE"}</div>
+     </div>
+     <div className="actions">
+       <div><div className="clock">{now.toLocaleTimeString()}</div><div className="date">{now.toLocaleDateString([], {weekday:"short",month:"short",day:"numeric"})}</div></div>
+       <div className="service">Lunch service · 11:30–15:30</div>
+       <div className="tabs">
+         <button className={"tab "+(tab==="kitchen"?"active":"")} onClick={()=>setTab("kitchen")}>Kitchen</button>
+         <button className={"tab "+(tab==="dining"?"active":"")} onClick={()=>setTab("dining")}>Dining</button>
+         <button className={"tab "+(tab==="dispatch"?"active":"")} onClick={()=>setTab("dispatch")}>Dispatch</button>
+       </div>
+     </div>
+   </header>
+
+   <section className="kpis">
+     <Kpi icon={Clock} label="Orders in queue" value={orders.length} sub="active right now" color={C.amber} progress={Math.min(100,orders.length*18)}/>
+     <Kpi icon={Alert} label="At risk" value={atRisk} sub={atRisk?"requires attention":"all on track"} color={atRisk?C.red:C.green} progress={orders.length?(atRisk/orders.length)*100:0}/>
+     <Kpi icon={Thermo} label="Kitchen load" value={avg+"%"} sub={`${stations.length} stations reporting`} color={avg>=85?C.red:avg>=70?C.amber:C.green} progress={avg}/>
+     <Kpi icon={Bike} label="Riders ready" value={`${ready}/${activeRidersCount}`} sub="dispatch capacity" color={ready?C.green:C.red}/>
+     <Kpi icon={Zap} label="Next action" value={backendError?"Error":rec?.chosen?rec.chosen.label:"Clear"} sub={backendError?"service unavailable":rec?.chosen?"AI priority":"no action needed"} color={backendError?C.red:C.amber}/>
+   </section>
+
+   {tab==="kitchen"&&<div className="layout">
+     <div className="stack">
+       <section className="card hero">
+         <div className="heroRow">
+           <div>
+             <div className="eyebrow">NEXT BEST ACTION · LIVE PRIORITY ENGINE</div>
+             {backendError ? (
+               <>
+                 <div className="heroTitle" style={{color:C.red}}>Backend Service Offline</div>
+                 <div className="heroText" style={{color:C.red}}>
+                   {backendError}. Scheduling engine unreachable. No local recommendation fallback.
+                 </div>
+               </>
+             ) : loading ? (
+               <div className="heroTitle">Connecting to scheduling engine...</div>
+             ) : rec?.chosen ? (
+               <>
+                 <div className="heroTitle">Prepare {rec.chosen.label} first</div>
+                 <div className="heroText">
+                   {rec.reason || (rec.chosen.type==="delivery"
+                    ?`Rider ${riders.find(r=>r.id===rec.chosen.riderId)?.id||"—"} is approaching. Prep needs ~${rec.chosen.prep} minutes, so starting now protects the handoff window.`
+                    :`Table has already waited ${rec.chosen.waited||0} minutes. With ~${rec.chosen.prep} minutes of prep remaining, this is the highest dining priority.`)}
+                 </div>
+               </>
+             ) : (
+               <div className="heroTitle">Kitchen is clear</div>
+             )}
+           </div>
+           {backendError ? (
+             <div className="badge" style={{color:C.red,background:C.redBg}}>OFFLINE</div>
+           ) : rec?.chosen ? (
+             <div className="priority">PRIORITY #1</div>
+           ) : null}
+         </div>
+         {!backendError && rec?.other && (
+           <div className="options">
+             <div className="option"><div className="optionTitle">ALTERNATIVE · {rec.other.label}</div><div className="optionLine">{rec.alternativeReason || "Start second · protects current queue order"}</div></div>
+             <div className="option recommended"><div className="optionTitle">RECOMMENDED · {rec.chosen.label} ✓</div><div className="optionLine">{rec.recommendedLine || "Start now · minimizes combined waiting time"}</div></div>
+           </div>
+         )}
+         {!backendError && rec?.chosen && (
+           <div className="btns">
+             <button className="primary" disabled={!!pendingAction} onClick={()=>start(rec.chosen)}>
+               {pendingAction===`start-${rec.chosen.id}`?"Starting...":"Accept recommendation"}
+             </button>
+             <button className="secondary" disabled={!!pendingAction || !rec.other} onClick={()=>rec.other&&start(rec.other)}>
+               {pendingAction&&pendingAction.startsWith("start-")?"Starting...":"Override"}
+             </button>
+           </div>
+         )}
+       </section>
+
+       <section className="card panel">
+         <div className="panelHead"><div className="eyebrow">ACTIVE ORDER QUEUE</div><div className="headMeta">{orders.length} active · sorted by urgency</div></div>
+         <div className="queueList">{orders.length?orders.map(o=><OrderRow key={o.id} o={o} riders={riders} active={!!rec&&rec.chosen?.id===o.id} onStart={start} isPending={pendingAction===`start-${o.id}`}/>):<div className="empty">No pending kitchen work.</div>}</div>
+       </section>
+
+       <div className="grid2">
+         <section className="card panel">
+           <div className="panelHead"><div className="eyebrow">RECENT ACTIVITY</div><div className="headMeta">auto-updating</div></div>
+           {log.map((x,i)=><div className="activity" key={i}><span className="activityDot" style={{background:i===0?C.amber:C.faint}}/><span className="activityText">{x}</span></div>)}
+         </section>
+         <section className="card panel">
+           <div className="panelHead"><div className="eyebrow">SERVICE PERFORMANCE</div><div className="headMeta">simulated benchmark</div></div>
+           {[["Avg rider wait","8.4m","3.1m"],["Late deliveries","24%","11%"],["Food ready early","18%","7%"],["Orders completed","31","38"]].map(r=>
+             <div className="metricLine" key={r[0]}><span className="metricLabel">{r[0]}</span><span className="metricValue"><span style={{color:"#667380"}}>{r[1]}</span> <span style={{color:"#667380"}}>→</span> <span className="good">{r[2]}</span></span></div>)}
+         </section>
+       </div>
+
+       <section className="card panel">
+         <div className="panelHead"><div className="eyebrow">SIMULATE OPERATING EVENTS</div><div className="headMeta">demo controls</div></div>
+         <div className="sim">
+           <button disabled={!!pendingAction} onClick={()=>addOrder("delivery")}><Plus/> {pendingAction==="add-delivery"?"Adding...":"New delivery"}</button>
+           <button disabled={!!pendingAction} onClick={()=>addOrder("dinein")}><Chair/> {pendingAction==="add-dinein"?"Seating...":"Seat table"}</button>
+           <button disabled={!!pendingAction} onClick={delay}><Reset/> {pendingAction==="delay"?"Delaying...":"Delay rider"}</button>
+           <button disabled={!!pendingAction} onClick={down}><UserX/> {pendingAction==="down"?"Marking...":"Rider unavailable"}</button>
+           <button disabled={!!pendingAction} onClick={slow}><Thermo/> {pendingAction==="slow"?"Applying...":"Kitchen slowdown"}</button>
+         </div>
+       </section>
+     </div>
+
+     <div className="stack">
+       <section className="card panel stations">
+         <div className="panelHead"><div className="eyebrow">STATION HEALTH</div><div className="headMeta">live telemetry</div></div>
+         {stations.map(s=><Station key={s.name} s={s}/> )}
+       </section>
+
+       <section className="card panel">
+         <div className="panelHead"><div className="eyebrow">DISPATCH SNAPSHOT</div><div className="headMeta">{ready} available</div></div>
+         {riders.map(r=><div className="riderRow" key={r.id}>
+           <div className="orderLeft"><div className="typeIcon" style={{color:r.status==="available"?C.green:r.status==="delayed"?C.amber:r.status==="unavailable"?C.red:C.blue}}><Bike/></div>
+           <div><div className="bigName">{r.id}</div><div className="small">{r.status==="available"?"Ready for pickup":r.status==="delivering"?"Currently delivering":"Needs attention"}</div></div></div>
+           <div className="rightInfo"><span className="secondaryStat">ETA {r.eta===999?"—":r.eta+"m"}</span><Badge kind={r.status}>{r.status==="delivering"?"Delivering":r.status.charAt(0).toUpperCase()+r.status.slice(1)}</Badge></div>
+         </div>)}
+       </section>
+
+       <section className="card panel">
+         <div className="panelHead"><div className="eyebrow">QUEUE MIX</div><div className="headMeta">current workload</div></div>
+         <div className="metricLine"><span className="metricLabel">Dine-in</span><span className="metricValue">{dine.length}</span></div>
+         <div className="metricLine"><span className="metricLabel">Delivery</span><span className="metricValue">{delivery.length}</span></div>
+         <div className="metricLine"><span className="metricLabel">Highest wait</span><span className="metricValue warn">{dine.length?Math.max(...dine.map(x=>x.waited||0))+"m":"—"}</span></div>
+         <div className="metricLine"><span className="metricLabel">Operational mode</span><span className="metricValue good">Optimized</span></div>
+       </section>
+     </div>
+   </div>}
+
+   {tab==="dining"&&<section className="card panel">
+      <div className="panelHead"><div className="eyebrow">DINING FLOOR · KITCHEN HANDOFFS</div><div className="headMeta">{dine.length} tables waiting</div></div>
+      {dine.length?dine.map(o=>{const st=status(o,riders),next=rec?.chosen?.id===o.id;return <div className="tableRow" key={o.id}>
+        <div className="orderLeft"><div className="typeIcon" style={{color:C.amber}}><Chair/></div><div><div className="bigName">{o.label}</div><div className="small">Waited {o.waited||0}m · prep ~{o.prep}m · {next?"Kitchen priority":"In queue"}</div></div></div>
+        <div className="rightInfo">{next&&<Badge kind="atRisk">Up next</Badge>}<Badge kind={st}>{st==="onTrack"?"On track":st==="atRisk"?"At risk":"Critical"}</Badge></div>
+      </div>}):<div className="empty">No dining orders waiting on the kitchen.</div>}
+   </section>}
+
+   {tab==="dispatch"&&<section className="card panel">
+      <div className="panelHead"><div className="eyebrow">DISPATCH COMMAND BOARD</div><div className="headMeta">{delivery.length} delivery orders</div></div>
+      {riders.map(r=>{const linked=delivery.find(o=>o.riderId===r.id);const next=linked&&rec?.chosen?.id===linked.id;return <div className="tableRow" key={r.id}>
+        <div className="orderLeft"><div className="typeIcon" style={{color:C.blue}}><Bike/></div><div><div className="bigName">{r.id} · {linked?.label||"No active delivery"}</div><div className="small">{r.status==="unavailable"?"Unavailable":next?"Leave now — order preparing":"Hold position until kitchen handoff"}</div></div></div>
+        <div className="rightInfo"><span className="secondaryStat">ETA {r.eta===999?"—":r.eta+"m"}</span><Badge kind={r.status}>{r.status==="delivering"?"Delivering":r.status.charAt(0).toUpperCase()+r.status.slice(1)}</Badge></div>
+      </div>})}
+   </section>}
+ </div>
+}
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>
